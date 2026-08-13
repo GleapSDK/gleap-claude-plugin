@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gleap": {
+      "type": "http",
+      "url": "https://mcp.gleap.io/mcp"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "gleap",
+  "displayName": "Gleap",
+  "version": "1.0.0",
+  "description": "Work your Gleap support queue from Claude: triage tickets, look up customers, draft replies, and keep the help center current.",
+  "author": {
+    "name": "Gleap",
+    "email": "support@gleap.io",
+    "url": "https://gleap.io"
+  },
+  "homepage": "https://gleap.io/mcp",
+  "repository": "https://github.com/GleapSDK/gleap-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "customer-support",
+    "helpdesk",
+    "tickets",
+    "feedback",
+    "help-center",
+    "crm"
+  ]
+}
