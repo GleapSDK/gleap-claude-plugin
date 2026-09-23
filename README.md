@@ -1,6 +1,6 @@
 # Gleap for Claude
 
-Work your [Gleap](https://gleap.io) support queue from Claude Code and Cowork: triage tickets, look up customers, draft replies grounded in your help center, manage CRM pipelines, and pull support analytics.
+Work your [Gleap](https://www.gleap.ai) support queue from Claude Code and Cowork: triage tickets, look up customers, draft replies grounded in your help center, manage CRM pipelines, and pull support analytics.
 
 ## Install
 
@@ -35,7 +35,7 @@ A Gleap account with at least one project. Any paid or trial plan works.
 
 ## Privacy Policy
 
-Gleap's privacy policy is at **https://gleap.io/legal/privacy-policy**.
+Gleap's privacy policy is at **https://www.gleap.ai/legal/privacy-policy**.
 
 **What is collected.** The connector transmits only the arguments of the tool calls Claude makes (search terms, ticket and contact identifiers, and any content you ask it to write) to the Gleap API, plus the OAuth token identifying your workspace. It does not read your conversation history, Claude's memory, or local files.
 
@@ -50,7 +50,7 @@ Gleap's privacy policy is at **https://gleap.io/legal/privacy-policy**.
 ## Support
 
 - Setup guide: https://help.gleap.io/en/articles/191-connecting-to-the-gleap-mcp-server
-- Docs: https://gleap.io/mcp
+- Gleap MCP overview: https://www.gleap.ai/mcp
 - Email: support@gleap.io
 
 ## License
