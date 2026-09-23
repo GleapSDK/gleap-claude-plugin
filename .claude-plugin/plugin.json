@@ -6,9 +6,9 @@
   "author": {
     "name": "Gleap",
     "email": "support@gleap.io",
-    "url": "https://gleap.io"
+    "url": "https://www.gleap.ai"
   },
-  "homepage": "https://gleap.io/mcp",
+  "homepage": "https://www.gleap.ai/mcp",
   "repository": "https://github.com/GleapSDK/gleap-claude-plugin",
   "license": "MIT",
   "keywords": [
