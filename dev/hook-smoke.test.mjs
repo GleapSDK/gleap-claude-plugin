@@ -8,7 +8,7 @@
 // silence + exit 0 when there is no session file, the token expired, or the
 // server is down or hangs.
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -115,6 +115,17 @@ describe("gleap-hook", () => {
         { content: "Open the PR", status: "pending" },
       ],
     });
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  test("security: a group/world-readable session.json is tightened to 0600 before use", { skip: process.platform === "win32" }, async () => {
+    const repo = makeRepo({});
+    const file = join(repo, ".gleap", "session.json");
+    chmodSync(file, 0o644);
+    const r = await runHook(["stop", "--harness", "claude-code"], common(repo, { hook_event_name: "Stop", last_assistant_message: "Done." }));
+    assert.equal(r.code, 0);
+    assert.equal(statSync(file).mode & 0o777, 0o600);
+    assert.equal(requests.length, 1);
     rmSync(repo, { recursive: true, force: true });
   });
 

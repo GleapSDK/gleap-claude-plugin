@@ -14,13 +14,13 @@ This is an investigation, not a fix: no code changes, no commits, no pull reques
 Make this call first, before you read code:
 
 - `report_progress` with phase `investigating`, a one-line status, `agentName` (`"Claude Code"` or `"Codex"`), and the `sessionId` from the kickoff. No session id? Pass `ticketId` (24-char id or `#number`) instead. The result names the session id; pass it on every later Gleap call.
-- The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else. Not inside a git repository? Write it in the folder you work in and skip the exclude step.
+- The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Make it readable only by you: run `chmod 600 .gleap/session.json` right after writing it (skip this on Windows). Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else. Not inside a git repository? Write it in the folder you work in and skip the exclude step.
 
 The plugin's hooks read that file. From then on Gleap shows the plan your todo tool keeps and, if a turn ends without a wrap-up, your last message as its recap. Without the file the hooks do nothing.
 
 ## 2. Load the workflow
 
-Call `get_agent_workflow` with the session id and `kind: "answer"`, and follow the markdown it returns as your instructions for the rest of the session. If its result carries a session-file block too, write that one to `.gleap/session.json` instead.
+Call `get_agent_workflow` with the session id and `kind: "answer"`, and follow the markdown it returns as your instructions for the rest of the session. If its result carries a session-file block too, write that one to `.gleap/session.json` instead, again with `chmod 600`.
 
 `get_agent_workflow` missing (an older Gleap MCP server)? Read the hosted copy instead: `https://gleap.io/agent-setup/claude-code-answer.md` for Claude Code, `https://gleap.io/agent-setup/codex-answer.md` for Codex.
 

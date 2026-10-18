@@ -18,7 +18,7 @@
 // prints nothing except `{}` for Stop (Codex requires JSON there), and never
 // prints the token.
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, parse } from "node:path";
 
 const EVENTS = new Set(["plan", "stop", "session-start"]);
@@ -178,6 +178,22 @@ export const findSessionFile = (start) => {
   return null;
 };
 
+/**
+ * The session file holds a bearer token: a copy written with the default
+ * umask (0644) is readable by every local user. Tighten it to 0600 before use.
+ * Best effort: Windows has no POSIX modes, and a file we do not own stays as it is.
+ */
+export const tightenSessionFile = (file, platform = process.platform) => {
+  if (platform === "win32") return false;
+  try {
+    if ((statSync(file).mode & 0o077) === 0) return false;
+    chmodSync(file, 0o600);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const readSession = (file, now = Date.now()) => {
   let session;
   try {
@@ -322,6 +338,7 @@ export const run = async (argv = process.argv.slice(2)) => {
   const cwd = typeof event.cwd === "string" && event.cwd ? event.cwd : process.cwd();
   const sessionFile = findSessionFile(cwd);
   if (!sessionFile) return debug("no .gleap/session.json above", cwd);
+  if (tightenSessionFile(sessionFile)) debug("session.json was readable by others; set to 0600");
   const session = readSession(sessionFile);
   if (!session) return debug("session.json unreadable or expired");
   if (!isAllowedApiBase(session.apiBase)) return debug("apiBase is not a Gleap host; skipped");
