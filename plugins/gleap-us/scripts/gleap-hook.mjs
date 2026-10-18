@@ -22,14 +22,14 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unl
 import { dirname, join, parse } from "node:path";
 
 const EVENTS = new Set(["plan", "stop", "session-start"]);
-const REQUEST_TIMEOUT_MS = 3000;
+const REQUEST_TIMEOUT_MS = 2000;
 const HARD_EXIT_MS = 3500;
 const MAX_STDIN_BYTES = 2_000_000;
 const MAX_ITEMS = 50;
 const MAX_ITEM_CHARS = 300;
 const MAX_LAST_MESSAGE_CHARS = 4000;
 const STATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const LOCK_WAIT_MS = 3000;
+const LOCK_WAIT_MS = 1000;
 const LOCK_STALE_MS = 5000;
 
 const debug = (...args) => {

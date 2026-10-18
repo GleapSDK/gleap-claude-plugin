@@ -81,7 +81,7 @@ With the file present, and only then:
 - The script looks for `.gleap/session.json` from the hook's working directory up to the repository root, and nowhere else.
 - It sends the plan items or the last assistant message (as above) to `POST <api>/v3/kai-agent-hooks/plan`, `/stop` or `/session-start`, with the token as a Bearer header. Nothing else from your session: no code, no file contents, no tool output, no transcript.
 - It only talks to Gleap hosts (`*.gleap.io`, `*.gleap.ai` over HTTPS), so a `session.json` planted in a repository can't send your plan anywhere else. An expired token is ignored.
-- It never blocks or fails your agent: every request has a 3-second timeout, errors are swallowed, the script always exits 0 and prints nothing your agent sees (Codex's `Stop` gets an empty `{}`, which it requires).
+- It never blocks or fails your agent: every request has a 2-second timeout and the script ends within 3.5 seconds, errors are swallowed, the script always exits 0 and prints nothing your agent sees (Codex's `Stop` gets an empty `{}`, which it requires).
 - For Claude Code's task tools it keeps a small per-session list in `.gleap/hook-tasks-<session>.json` so each update can send the whole plan; files older than seven days are removed.
 
 To stop the hooks for one repository, delete its `.gleap/` folder. To stop them everywhere, uninstall or disable the plugin.

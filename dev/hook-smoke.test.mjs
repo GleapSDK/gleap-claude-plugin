@@ -251,7 +251,7 @@ describe("gleap-hook", () => {
     for (const d of [expired, foreign, local]) rmSync(d, { recursive: true, force: true });
   });
 
-  test("server down → exit 0 fast; server hangs → exit 0 within the 3 s budget", async () => {
+  test("server down → exit 0 fast; server hangs → exit 0 after the 2 s request timeout", async () => {
     const down = makeRepo({ apiBase: "http://127.0.0.1:9" });
     const r1 = await runHook(["stop"], common(down, { last_assistant_message: "hi" }));
     assert.equal(r1.code, 0);
@@ -262,7 +262,19 @@ describe("gleap-hook", () => {
     const hang = makeRepo({});
     const r2 = await runHook(["plan"], common(hang, { tool_name: "TodoWrite", tool_input: { todos: [{ content: "a", status: "pending" }] } }));
     assert.equal(r2.code, 0);
-    assert.ok(r2.ms >= 2900 && r2.ms < 4500, `took ${r2.ms} ms`);
+    assert.ok(r2.ms >= 1900 && r2.ms < 3400, `took ${r2.ms} ms`);
+
+    // A second hook waiting on the lock gives up after 1 s and still gets its
+    // POST out before the 3.5 s hard exit.
+    requests = [];
+    const [a, b] = await Promise.all(
+      ["x", "y"].map((c) => runHook(["plan"], common(hang, { tool_name: "TodoWrite", tool_input: { todos: [{ content: c, status: "pending" }] } }))),
+    );
+    for (const r of [a, b]) {
+      assert.equal(r.code, 0);
+      assert.ok(r.ms < 3800, `took ${r.ms} ms`);
+    }
+    assert.equal(requests.length, 2);
     for (const d of [down, hang]) rmSync(d, { recursive: true, force: true });
   });
 
