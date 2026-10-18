@@ -1,0 +1,40 @@
+{
+  "description": "Gleap: mirror the agent's plan and last message to the Gleap coding session (only when .gleap/session.json exists, i.e. for sessions started from Gleap).",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "TodoWrite|TaskCreate|TaskUpdate|.*update_plan",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gleap-hook.mjs\" plan --harness claude-code",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gleap-hook.mjs\" stop --harness claude-code",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gleap-hook.mjs\" session-start --harness claude-code",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

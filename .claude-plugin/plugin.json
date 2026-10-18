@@ -1,8 +1,8 @@
 {
   "name": "gleap",
   "displayName": "Gleap",
-  "version": "1.0.0",
-  "description": "Work your Gleap support queue from Claude: triage tickets, look up customers, draft replies, and keep the help center current.",
+  "version": "1.1.0",
+  "description": "Work your Gleap support queue from Claude: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap.",
   "author": {
     "name": "Gleap",
     "email": "support@gleap.io",
@@ -17,6 +17,7 @@
     "tickets",
     "feedback",
     "help-center",
-    "crm"
+    "crm",
+    "bug-fixing"
   ]
 }

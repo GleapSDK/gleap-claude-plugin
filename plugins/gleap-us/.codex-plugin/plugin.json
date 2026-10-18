@@ -1,0 +1,40 @@
+{
+  "name": "gleap-us",
+  "version": "1.1.0",
+  "description": "Work your Gleap support queue from Codex: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap. For workspaces hosted in the US.",
+  "author": {
+    "name": "Gleap",
+    "email": "support@gleap.io",
+    "url": "https://www.gleap.ai"
+  },
+  "homepage": "https://www.gleap.ai/mcp",
+  "repository": "https://github.com/GleapSDK/gleap-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "customer-support",
+    "helpdesk",
+    "tickets",
+    "bug-fixing"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Gleap (US)",
+    "shortDescription": "Fix and answer Gleap tickets",
+    "longDescription": "Connects Codex to your Gleap workspace (US region): triage the inbox, draft replies, and fix or answer tickets. For sessions started from Gleap, hooks mirror your plan and your last message to the Gleap coding session.",
+    "developerName": "Gleap",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://www.gleap.ai/mcp",
+    "privacyPolicyURL": "https://www.gleap.ai/legal/privacy-policy",
+    "defaultPrompt": [
+      "Fix Gleap ticket #",
+      "Answer Gleap ticket #",
+      "Triage the Gleap inbox"
+    ]
+  }
+}
