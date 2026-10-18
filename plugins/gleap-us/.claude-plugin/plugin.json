@@ -1,0 +1,23 @@
+{
+  "name": "gleap-us",
+  "displayName": "Gleap (US)",
+  "version": "1.1.0",
+  "description": "Work your Gleap support queue from Claude: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap. For workspaces hosted in the US.",
+  "author": {
+    "name": "Gleap",
+    "email": "support@gleap.io",
+    "url": "https://www.gleap.ai"
+  },
+  "homepage": "https://www.gleap.ai/mcp",
+  "repository": "https://github.com/GleapSDK/gleap-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "customer-support",
+    "helpdesk",
+    "tickets",
+    "feedback",
+    "help-center",
+    "crm",
+    "bug-fixing"
+  ]
+}

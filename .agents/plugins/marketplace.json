@@ -1,0 +1,20 @@
+{
+  "name": "gleap",
+  "interface": {
+    "displayName": "Gleap"
+  },
+  "plugins": [
+    {
+      "name": "gleap",
+      "source": { "source": "local", "path": "./" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "gleap-us",
+      "source": { "source": "local", "path": "./plugins/gleap-us" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Developer Tools"
+    }
+  ]
+}
