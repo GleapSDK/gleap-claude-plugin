@@ -12,7 +12,7 @@ The ticket is the one your operator named: a `#number`, a 24-char ticket id, or 
 Make this call first, before you read code:
 
 - `report_progress` with phase `investigating`, a one-line status, `agentName` (`"Claude Code"` or `"Codex"`), and the `sessionId` from the kickoff. No session id? Pass `ticketId` (24-char id or `#number`) instead. The result names the session id; pass it on every later Gleap call.
-- The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else.
+- The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Make it readable only by you: run `chmod 600 .gleap/session.json` right after writing it (skip this on Windows). Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else.
 
 The plugin's hooks read that file. From then on Gleap shows the plan your todo tool keeps and, if a turn ends without a wrap-up, your last message as its recap. Without the file the hooks do nothing.
 
@@ -23,7 +23,7 @@ Call `get_ticket` once to see the ticket type, then `get_agent_workflow` with th
 - `feature` for a feature request,
 - `fix` for everything else (bug reports, requested changes).
 
-Follow the markdown it returns as your instructions for the rest of the session: it carries this project's rules for customer messages, branches and PRs. If its result carries a session-file block too, write that one to `.gleap/session.json` instead.
+Follow the markdown it returns as your instructions for the rest of the session: it carries this project's rules for customer messages, branches and PRs. If its result carries a session-file block too, write that one to `.gleap/session.json` instead, again with `chmod 600`.
 
 `get_agent_workflow` missing (an older Gleap MCP server)? Read the hosted copy instead: `https://gleap.io/agent-setup/claude-code.md` for Claude Code, `https://gleap.io/agent-setup/codex.md` for Codex (`-feature.md` instead of `.md` for feature requests).
 

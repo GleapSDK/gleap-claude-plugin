@@ -1,7 +1,7 @@
 {
   "name": "gleap-us",
   "displayName": "Gleap (US)",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Work your Gleap support queue from Claude: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap. For workspaces hosted in the US.",
   "author": {
     "name": "Gleap",
