@@ -2,7 +2,7 @@
   "mcpServers": {
     "gleap": {
       "type": "http",
-      "url": "https://mcp.gleap.io/mcp"
+      "url": "https://mcp.gleap.ai/mcp"
     }
   }
 }

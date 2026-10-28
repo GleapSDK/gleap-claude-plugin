@@ -253,7 +253,7 @@ describe("gleap-hook", () => {
 
   test("expired token, non-Gleap host, or local host without opt-in → no request", async () => {
     const expired = makeRepo({ expiresAt: new Date(Date.now() - 1000).toISOString() });
-    const foreign = makeRepo({ apiBase: "https://gleap.io.evil.example" });
+    const foreign = makeRepo({ apiBase: "https://gleap.ai.evil.example" });
     const local = makeRepo({});
     await runHook(["stop"], common(expired, { last_assistant_message: "hi" }));
     await runHook(["stop"], common(foreign, { last_assistant_message: "hi" }));
