@@ -12,7 +12,7 @@
 //   session-start  POST {apiBase}/v3/kai-agent-hooks/session-start  { harness, source? }
 //
 // `.gleap/session.json` only exists for sessions started from Gleap (the agent
-// writes it from the `hook` block of a report_progress / get_agent_workflow
+// writes it from the `hook` block of a report_progress
 // result). No file, an expired token or a non-Gleap host: the script does
 // nothing. It never blocks or fails the agent: every path exits 0 within ~3.5 s,
 // prints nothing except `{}` for Stop (Codex requires JSON there), and never
@@ -156,7 +156,7 @@ export const isAllowedApiBase = (apiBase, env = process.env) => {
   const local = host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
   if (local) return env.GLEAP_HOOK_ALLOW_LOCAL === "1";
   if (url.protocol !== "https:") return false;
-  return ["gleap.io", "gleap.ai"].some((d) => host === d || host.endsWith(`.${d}`));
+  return ["gleap.ai", "gleap.ai"].some((d) => host === d || host.endsWith(`.${d}`));
 };
 
 export const hookUrl = (apiBase, event) => {

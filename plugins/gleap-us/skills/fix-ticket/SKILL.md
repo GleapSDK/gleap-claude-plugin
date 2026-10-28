@@ -18,14 +18,12 @@ The plugin's hooks read that file. From then on Gleap shows the plan your todo t
 
 ## 2. Load the workflow
 
-Call `get_ticket` once to see the ticket type, then `get_agent_workflow` with the session id and `kind`:
+Call `get_ticket` once to see the ticket type, then read the workflow in this skill's `workflows/` folder that matches it and the app you run in:
 
-- `feature` for a feature request,
-- `fix` for everything else (bug reports, requested changes).
+- a feature request: `workflows/feature-claude-code.md` in Claude Code, `workflows/feature-codex.md` in Codex,
+- everything else (bug reports, requested changes): `workflows/fix-claude-code.md` in Claude Code, `workflows/fix-codex.md` in Codex.
 
-Follow the markdown it returns as your instructions for the rest of the session: it carries this project's rules for customer messages, branches and PRs. If its result carries a session-file block too, write that one to `.gleap/session.json` instead, again with `chmod 600`.
-
-`get_agent_workflow` missing (an older Gleap MCP server)? Read the hosted copy instead: `https://gleap.io/agent-setup/claude-code.md` for Claude Code, `https://gleap.io/agent-setup/codex.md` for Codex (`-feature.md` instead of `.md` for feature requests).
+Work by it for the rest of the session: it carries the steps and the rules for customer messages, branches and PRs.
 
 ## 3. Work visibly
 

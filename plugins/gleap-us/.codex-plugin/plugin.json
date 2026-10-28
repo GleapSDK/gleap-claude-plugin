@@ -1,10 +1,10 @@
 {
   "name": "gleap-us",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Work your Gleap support queue from Codex: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap. For workspaces hosted in the US.",
   "author": {
     "name": "Gleap",
-    "email": "support@gleap.io",
+    "email": "support@gleap.ai",
     "url": "https://www.gleap.ai"
   },
   "homepage": "https://www.gleap.ai/mcp",

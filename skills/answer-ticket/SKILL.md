@@ -20,9 +20,7 @@ The plugin's hooks read that file. From then on Gleap shows the plan your todo t
 
 ## 2. Load the workflow
 
-Call `get_agent_workflow` with the session id and `kind: "answer"`, and follow the markdown it returns as your instructions for the rest of the session. If its result carries a session-file block too, write that one to `.gleap/session.json` instead, again with `chmod 600`.
-
-`get_agent_workflow` missing (an older Gleap MCP server)? Read the hosted copy instead: `https://gleap.io/agent-setup/claude-code-answer.md` for Claude Code, `https://gleap.io/agent-setup/codex-answer.md` for Codex.
+Read the workflow in this skill's `workflows/` folder for the app you run in: `workflows/answer-claude-code.md` in Claude Code, `workflows/answer-codex.md` in Codex. Work by it for the rest of the session: it carries the steps and the rules for customer messages.
 
 ## 3. Work visibly
 

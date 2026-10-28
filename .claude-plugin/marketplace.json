@@ -3,14 +3,14 @@
   "description": "Gleap for coding agents: the Gleap MCP server, ticket skills, and hooks that keep a Gleap coding session in sync.",
   "owner": {
     "name": "Gleap",
-    "email": "support@gleap.io",
+    "email": "support@gleap.ai",
     "url": "https://www.gleap.ai"
   },
   "plugins": [
     {
       "name": "gleap",
       "source": "./",
-      "description": "Gleap for workspaces hosted in the EU (MCP https://mcp.gleap.io/mcp).",
+      "description": "Gleap for workspaces hosted in the EU (MCP https://mcp.gleap.ai/mcp).",
       "category": "productivity",
       "tags": ["support", "tickets", "bug-fixing"]
     },

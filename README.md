@@ -6,7 +6,7 @@ This repository is a plugin marketplace named `gleap` with two plugins. Install 
 
 | Plugin | Region | MCP server |
 |---|---|---|
-| `gleap` | EU | `https://mcp.gleap.io/mcp` |
+| `gleap` | EU | `https://mcp.gleap.ai/mcp` |
 | `gleap-us` | US | `https://mcp.us.gleap.ai/mcp` |
 
 Both have the same skills and hooks.
@@ -49,13 +49,13 @@ Sign-in: the plugin bundles the Gleap MCP server as `gleap`. If Codex doesn't pr
 
 ## What's included
 
-**MCP server.** The hosted Gleap MCP server for your region: tickets, contacts, companies, CRM pipelines, help center, surveys, feature requests, analytics, and the coding-session tools (`report_progress`, `update_plan`, `share_screenshot`, `publish_artifact`, `wrap_up`, `get_agent_workflow`, `get_ticket_screenshot`). Read tools are annotated read-only; anything that creates, updates or deletes asks first.
+**MCP server.** The hosted Gleap MCP server for your region: tickets, contacts, companies, CRM pipelines, help center, surveys, feature requests, analytics, and the coding-session tools (`report_progress`, `update_plan`, `share_screenshot`, `publish_artifact`, `wrap_up`, `get_ticket_screenshot`). Read tools are annotated read-only; anything that creates, updates or deletes asks first.
 
 **Skills**
 
 | Skill | What it does |
 |---|---|
-| `fix-ticket` | Fixes a ticket or builds a feature request as a tracked Gleap coding session: reports in, saves the session file, loads the project's workflow with `get_agent_workflow`, keeps a plan, shares screenshots, opens the PR and ends each turn with `wrap_up`. |
+| `fix-ticket` | Fixes a ticket or builds a feature request as a tracked Gleap coding session: reports in, saves the session file, works by the Gleap workflow that ships inside the skill, keeps a plan, shares screenshots, opens the PR and ends each turn with `wrap_up`. |
 | `answer-ticket` | Investigates a ticket in the code and data and drafts the answer into the ticket composer, as a tracked session. No code changes, no PR. |
 | `triage-inbox` | Ranks the open queue by what costs most if it waits, clusters tickets sharing a root cause, and proposes owners and priorities. |
 | `draft-support-reply` | Reads the full thread and the customer's history, grounds the answer in your help center, and drafts a reply in the customer's language. |
@@ -74,13 +74,13 @@ Gleap uses the plan for the live checklist on the session, and the last message 
 
 ## What the hooks send, and when
 
-The hooks do nothing unless the folder you work in has a `.gleap/session.json`. The agent writes that file only for a session started from Gleap: the `report_progress` and `get_agent_workflow` results hand it a session id, a short-lived token (48 hours, scoped to that one session's plan and wrap-up) and the API address, and the `fix-ticket` / `answer-ticket` skills and the Gleap workflows tell it to save them there and add `.gleap/` to `.git/info/exclude`.
+The hooks do nothing unless the folder you work in has a `.gleap/session.json`. The agent writes that file only for a session started from Gleap: the `report_progress` results hand it a session id, a short-lived token (48 hours, scoped to that one session's plan and wrap-up) and the API address, and the `fix-ticket` / `answer-ticket` skills and the Gleap workflows tell it to save them there and add `.gleap/` to `.git/info/exclude`.
 
 With the file present, and only then:
 
 - The script looks for `.gleap/session.json` from the hook's working directory up to the repository root, and nowhere else.
 - It sends the plan items or the last assistant message (as above) to `POST <api>/v3/kai-agent-hooks/plan`, `/stop` or `/session-start`, with the token as a Bearer header. Nothing else from your session: no code, no file contents, no tool output, no transcript.
-- It only talks to Gleap hosts (`*.gleap.io`, `*.gleap.ai` over HTTPS), so a `session.json` planted in a repository can't send your plan anywhere else. An expired token is ignored.
+- It only talks to Gleap hosts (`*.gleap.ai`, `*.gleap.ai` over HTTPS), so a `session.json` planted in a repository can't send your plan anywhere else. An expired token is ignored.
 - It never blocks or fails your agent: every request has a 2-second timeout and the script ends within 3.5 seconds, errors are swallowed, the script always exits 0 and prints nothing your agent sees (Codex's `Stop` gets an empty `{}`, which it requires).
 - For Claude Code's task tools it keeps a small per-session list in `.gleap/hook-tasks-<session>.json` so each update can send the whole plan; files older than seven days are removed.
 
@@ -132,7 +132,7 @@ Gleap's privacy policy is at **https://www.gleap.ai/legal/privacy-policy**.
 
 **Retention.** Workspace data follows your Gleap account's retention settings. OAuth tokens persist until you revoke them, from Gleap → Settings, or by disconnecting the connector. Hook tokens expire after 48 hours.
 
-**Contact.** support@gleap.io
+**Contact.** support@gleap.ai
 
 ## Development
 
@@ -140,9 +140,9 @@ Gleap's privacy policy is at **https://www.gleap.ai/legal/privacy-policy**.
 
 ## Support
 
-- Setup guide: https://help.gleap.io/en/articles/191-connecting-to-the-gleap-mcp-server
+- Setup guide: https://help.gleap.ai/en/articles/191-connecting-to-the-gleap-mcp-server
 - Gleap MCP overview: https://www.gleap.ai/mcp
-- Email: support@gleap.io
+- Email: support@gleap.ai
 
 ## License
 
