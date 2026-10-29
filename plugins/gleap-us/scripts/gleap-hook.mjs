@@ -156,7 +156,8 @@ export const isAllowedApiBase = (apiBase, env = process.env) => {
   const local = host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
   if (local) return env.GLEAP_HOOK_ALLOW_LOCAL === "1";
   if (url.protocol !== "https:") return false;
-  return ["gleap.ai", "gleap.ai"].some((d) => host === d || host.endsWith(`.${d}`));
+  // EU sessions carry dashapi.gleap.io, US sessions dashapi.us.gleap.ai.
+  return ["gleap.io", "gleap.ai"].some((d) => host === d || host.endsWith(`.${d}`));
 };
 
 export const hookUrl = (apiBase, event) => {
