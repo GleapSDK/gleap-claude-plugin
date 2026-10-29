@@ -1,7 +1,7 @@
 {
   "name": "gleap",
   "displayName": "Gleap",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Work your Gleap support queue from Claude: triage tickets, draft replies, and fix or answer tickets with your plan and progress live in Gleap.",
   "author": {
     "name": "Gleap",
@@ -9,7 +9,9 @@
     "url": "https://www.gleap.ai"
   },
   "homepage": "https://www.gleap.ai/mcp",
+  "documentationUrl": "https://docs.gleap.ai/documentation/kai-code/coding-agents",
   "privacyPolicyUrl": "https://www.gleap.ai/legal/privacy-policy",
+  "termsOfServiceUrl": "https://www.gleap.ai/legal/terms-of-service",
   "repository": "https://github.com/GleapSDK/gleap-claude-plugin",
   "license": "MIT",
   "keywords": [

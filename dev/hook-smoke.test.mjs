@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, beforeEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const script = join(dirname(fileURLToPath(import.meta.url)), "..", "scripts", "gleap-hook.mjs");
 const TOKEN = "test-hook-token-DO-NOT-PRINT";
@@ -260,6 +260,19 @@ describe("gleap-hook", () => {
     await runHook(["stop"], common(local, { last_assistant_message: "hi" }), { GLEAP_HOOK_ALLOW_LOCAL: "" });
     assert.equal(requests.length, 0);
     for (const d of [expired, foreign, local]) rmSync(d, { recursive: true, force: true });
+  });
+
+  test("Gleap API hosts on both domains are allowed; look-alikes are not", async () => {
+    process.env.GLEAP_HOOK_IMPORT_ONLY = "1";
+    const { isAllowedApiBase } = await import(pathToFileURL(script).href);
+    delete process.env.GLEAP_HOOK_IMPORT_ONLY;
+    // The EU session file carries https://dashapi.gleap.io, the US one https://dashapi.us.gleap.ai.
+    for (const base of ["https://dashapi.gleap.io", "https://dashapi.us.gleap.ai", "https://api.gleap.io/v3"]) {
+      assert.equal(isAllowedApiBase(base, {}), true, base);
+    }
+    for (const base of ["https://gleap.ai.evil.example", "https://evilgleap.io", "http://dashapi.gleap.io"]) {
+      assert.equal(isAllowedApiBase(base, {}), false, base);
+    }
   });
 
   test("server down → exit 0 fast; server hangs → exit 0 after the 2 s request timeout", async () => {
