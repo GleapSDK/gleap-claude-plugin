@@ -34,9 +34,17 @@ const SESSION_ID_RE = /^[a-f0-9]{24}$/i;
 /**
  * The Gleap MCP's STOP sentence (the session was stopped in Gleap: a teammate
  * took the ticket over, replied, or stopped it), the current wording and the
- * one before it. The same pattern Kai Code's runner ends a run on.
+ * one before it, at the START of a result: the fallback for an older Gleap MCP
+ * without `structuredContent.gleapStop` (see isGleapStopResult). Kai Code's
+ * runner uses the same rule.
  */
-export const GLEAP_STOP_PATTERN = /STOP: (this ticket is no longer yours in Gleap|your operator stopped this session in Gleap)/;
+export const GLEAP_STOP_PATTERN = /^\s*STOP: (this ticket is no longer yours in Gleap|your operator stopped this session in Gleap)/;
+/**
+ * The Gleap MCP server's tool names: `mcp__gleap__…` / `mcp__gleap-us__…`
+ * (added with `claude mcp add`) and this plugin's own server
+ * (`mcp__plugin_gleap_gleap__…`, `mcp__plugin_gleap-us_gleap__…`).
+ */
+const GLEAP_MCP_TOOL = /^mcp__(plugin_gleap(-us)?_)?gleap(-us)?__./i;
 const REQUEST_TIMEOUT_MS = 2000;
 const HARD_EXIT_MS = 3500;
 const MAX_STDIN_BYTES = 2_000_000;
@@ -272,21 +280,42 @@ export const mcpHeadersFor = ({ project, region, env = process.env, cwd = proces
   return { "x-gleap-session-id": session.sessionId };
 };
 
+/** The objects a PostToolUse `tool_response` may carry the MCP result's `structuredContent` on. */
+const structuredContentsOf = (response) => {
+  const out = [];
+  for (const holder of [response, response?.result]) {
+    const structured = holder && typeof holder === "object" && !Array.isArray(holder) ? holder.structuredContent : undefined;
+    if (structured && typeof structured === "object" && !Array.isArray(structured)) out.push(structured);
+  }
+  return out;
+};
+
+/** The first text of a tool result: a string, or the first text block of its content. */
+const firstResultText = (response) => {
+  for (const source of [response, response?.result]) {
+    if (typeof source === "string") return source;
+    const list = Array.isArray(source) ? source : Array.isArray(source?.content) ? source.content : null;
+    if (!list) continue;
+    for (const block of list) {
+      if (block && block.type === "text" && typeof block.text === "string") return block.text;
+    }
+  }
+  return undefined;
+};
+
 /**
- * Whether a PostToolUse event is a Gleap MCP tool whose result says STOP.
- * Only an MCP tool of a Gleap server counts: a command printing the sentence
- * (grep over the MCP server's source) is not a stop.
+ * Whether a PostToolUse event is the Gleap MCP saying STOP: a tool of the
+ * Gleap MCP server whose result carries `structuredContent.gleapStop` (only
+ * the Gleap MCP sets it), or, from an older Gleap MCP, whose text starts with
+ * the STOP sentence. Never the sentence found elsewhere in a result: a
+ * customer can write it into a message, another tool can print it.
  */
 export const isGleapStopResult = (event) => {
-  if (!/^mcp__.*gleap.*__/i.test(String(event?.tool_name ?? ""))) return false;
+  if (!GLEAP_MCP_TOOL.test(String(event?.tool_name ?? ""))) return false;
   const response = event?.tool_response;
-  let text = "";
-  try {
-    text = typeof response === "string" ? response : JSON.stringify(response ?? "");
-  } catch {
-    return false;
-  }
-  return GLEAP_STOP_PATTERN.test(text);
+  if (structuredContentsOf(response).some((structured) => structured.gleapStop === true)) return true;
+  const text = firstResultText(response);
+  return typeof text === "string" && GLEAP_STOP_PATTERN.test(text);
 };
 
 /**

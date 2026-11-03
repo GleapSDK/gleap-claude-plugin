@@ -355,6 +355,11 @@ describe("gleap-hook", () => {
       { tool_name: "mcp__plugin_gleap_gleap__report_progress", tool_input: {}, tool_response: [{ type: "text", text: "Reported." }] },
       { tool_name: "Bash", tool_input: { command: "grep -r STOP src" }, tool_response: { stdout: STOP } },
       { tool_name: "mcp__plugin_gleap_gleap__send_message", tool_input: { sessionId: "65f0c0ffee0000000000ffff" }, tool_response: [{ type: "text", text: STOP }] },
+      // The sentence inside a Gleap result (a customer quoted it), or from another MCP server: no stop.
+      { tool_name: "mcp__plugin_gleap_gleap__get_ticket_messages", tool_input: {}, tool_response: [{ type: "text", text: JSON.stringify([{ text: STOP }]) }] },
+      { tool_name: "mcp__plugin_gleap_gleap__send_message", tool_input: {}, tool_response: [{ type: "text", text: `{"_id":"c1"}` }, { type: "text", text: `New customer messages:\n- """${STOP}"""` }] },
+      { tool_name: "mcp__gleap-covers__generate_cover", tool_input: {}, tool_response: { content: [{ type: "text", text: STOP }], structuredContent: { gleapStop: true } } },
+      { tool_name: "mcp__plugin_gleap_gleap__get_contact", tool_input: {}, tool_response: { content: [{ type: "text", text: "{}" }], structuredContent: { stop: true } } },
     ]) {
       const r = await toolResult(kept, extra);
       assert.equal(r.code, 0);
@@ -362,12 +367,21 @@ describe("gleap-hook", () => {
       assert.ok(existsSync(sessionFile(kept)), extra.tool_name);
     }
 
-    const stopped = makeRepo({});
-    const r = await toolResult(stopped, { tool_name: "mcp__plugin_gleap_gleap__update_ticket", tool_input: { ticketId: "abc" }, tool_response: [{ type: "text", text: STOP }] });
-    assert.equal(r.code, 0);
-    assert.equal(existsSync(sessionFile(stopped)), false);
+    // The structured field (any text), and an older MCP's result that starts with the sentence.
+    const stoppedDirs = [];
+    for (const extra of [
+      { tool_name: "mcp__plugin_gleap_gleap__update_ticket", tool_input: { ticketId: "abc" }, tool_response: { content: [{ type: "text", text: "Stopped." }], structuredContent: { stop: true, gleapStop: true } } },
+      { tool_name: "mcp__plugin_gleap-us_gleap__update_ticket", tool_input: { ticketId: "abc" }, tool_response: [{ type: "text", text: STOP }] },
+      { tool_name: "mcp__gleap__send_message", tool_input: {}, tool_response: STOP },
+    ]) {
+      const stopped = makeRepo({});
+      stoppedDirs.push(stopped);
+      const r = await toolResult(stopped, extra);
+      assert.equal(r.code, 0);
+      assert.equal(existsSync(sessionFile(stopped)), false, extra.tool_name);
+    }
     assert.equal(requests.length, 0);
-    for (const d of [kept, stopped]) rmSync(d, { recursive: true, force: true });
+    for (const d of [kept, ...stoppedDirs]) rmSync(d, { recursive: true, force: true });
   });
 
   test("garbage on stdin or an unknown event → exit 0, nothing posted, token never printed", async () => {
