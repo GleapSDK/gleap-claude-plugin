@@ -33,6 +33,6 @@ Be specific about next steps and who owns them. "We are looking into it" with no
 
 ## Deliver
 
-Show the draft in chat first. On approval, `send_message` sends it. `draft_reply_to_composer` stages it in the dashboard instead so a human can edit and send.
+Show the draft in chat first and ask: "Send it?" On approval, `send_message` sends it; edits happen here in the chat. Nothing is staged in the ticket composer.
 
 If the ticket needs engineering, `create_feature_request` files it on the roadmap — but call `search_feature_requests` first, since duplicates fragment the upvotes that decide what gets built.

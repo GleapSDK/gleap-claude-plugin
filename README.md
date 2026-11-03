@@ -55,8 +55,8 @@ Sign-in: the plugin bundles the Gleap MCP server as `gleap`. If Codex doesn't pr
 
 | Skill | What it does |
 |---|---|
-| `fix-ticket` | Fixes a ticket or builds a feature request as a tracked Gleap coding session: reports in, saves the session file, works by the Gleap workflow that ships inside the skill, keeps a plan, shares screenshots, opens the PR and ends each turn with `wrap_up`. |
-| `answer-ticket` | Investigates a ticket in the code and data and drafts the answer into the ticket composer, as a tracked session. No code changes, no PR. |
+| `fix-ticket` | Fixes a ticket or builds a feature request as a tracked Gleap coding session that owns the ticket until the customer says it is solved: reports in, saves the session file, works by the Gleap workflow that ships inside the skill, keeps a plan, shares screenshots, opens the PR, asks you before anything goes to the customer, and ends each turn with `wrap_up`. |
+| `answer-ticket` | Investigates a ticket in the code and data, shows you the answer and sends it when you say yes, as a tracked session that owns the ticket until it is solved. No code changes, no PR. |
 | `triage-inbox` | Ranks the open queue by what costs most if it waits, clusters tickets sharing a root cause, and proposes owners and priorities. |
 | `draft-support-reply` | Reads the full thread and the customer's history, grounds the answer in your help center, and drafts a reply in the customer's language. |
 

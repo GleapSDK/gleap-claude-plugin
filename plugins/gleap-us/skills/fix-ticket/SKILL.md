@@ -1,22 +1,28 @@
 ---
 name: fix-ticket
-description: Fix a Gleap ticket end to end as a tracked Gleap coding session, with the plan, screenshots, PR, customer messages and a closing wrap-up visible in Gleap. Use when asked to fix, resolve, implement or work on a Gleap ticket or feature request, or when a Gleap kickoff prompt hands you a ticket to fix.
+description: Fix a Gleap ticket end to end as a tracked Gleap coding session that owns the ticket until the customer says it is solved, with the plan, screenshots, PR, customer messages and a closing wrap-up visible in Gleap. Use when asked to fix, resolve, implement or work on a Gleap ticket or feature request, or when a Gleap kickoff prompt hands you a ticket to fix.
 ---
 
 # Fix a Gleap ticket
 
-The ticket is the one your operator named: a `#number`, a 24-char ticket id, or a Gleap dashboard link (the id is the 24-char segment in it). A kickoff prompt from Gleap's "Open in …" button also names the coding session ("tracked as Gleap coding session …"). If you can't tell which ticket is meant, ask before you start.
+The ticket is the one your operator named: a `#number`, a 24-char ticket id, or a Gleap dashboard link (the id is the 24-char segment in it). A kickoff prompt from Gleap's "Open in …" button also names the coding session ("It is Gleap coding session …"). If you can't tell which ticket is meant, ask before you start.
+
+You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer or stops your session: then a Gleap result says STOP.
 
 ## 1. Report in and save the session file
 
 Make this call first, before you read code:
 
-- `report_progress` with phase `investigating`, a one-line status, `agentName` (`"Claude Code"` or `"Codex"`), and the `sessionId` from the kickoff. No session id? Pass `ticketId` (24-char id or `#number`) instead. The result names the session id; pass it on every later Gleap call.
+- `report_progress` with status `working`, step `investigating`, a one-line message, `agentName` (`"Claude Code"` or `"Codex"`), and the `sessionId` from the kickoff. No session id? Pass `ticketId` (24-char id or `#number`) instead. The result names the session id; pass it on every later Gleap call that takes one, `send_message` included.
 - The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Make it readable only by you: run `chmod 600 .gleap/session.json` right after writing it (skip this on Windows). Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else.
 
-The plugin's hooks read that file. From then on Gleap shows the plan your todo tool keeps and, if a turn ends without a wrap-up, your last message as its recap. Without the file the hooks do nothing.
+The plugin reads that file. Its hooks show your plan in Gleap and, if a turn ends without a wrap-up, your last message as its recap. When Claude Code starts in this repository, the Gleap tools also tell Gleap which session they work for. Without the file nothing of this happens.
 
-## 2. Load the workflow
+## 2. Continuing an earlier session
+
+If the kickoff says you continue an earlier session ("Continue in Claude Code"), read two things first, before you change anything: the whole ticket thread (`get_ticket_messages`) and the last session's notes in the kickoff. The customer may have written since. Then go on from where that session stopped. The session id stays the same.
+
+## 3. Load the workflow
 
 Call `get_ticket` once to see the ticket type, then read the workflow in this skill's `workflows/` folder that matches it and the app you run in:
 
@@ -25,19 +31,20 @@ Call `get_ticket` once to see the ticket type, then read the workflow in this sk
 
 Work by it for the rest of the session: it carries the steps and the rules for customer messages, branches and PRs.
 
-## 3. Work visibly
+## 4. The rules in short
 
-The workflow spells these out; in short:
-
-- **Plan.** For anything with more than two steps keep a plan and update it as you go: your own todo or plan tool (the hooks mirror it), or `update_plan` with the whole list each time and exactly one step `in_progress`.
-- **Screenshots.** After a change your operator can see, run the app, check it in a browser and `share_screenshot` 1 to 3 shots with a one-line caption (`compare_with` for a before/after pair). The result gives you an upload command: run it.
-- **Pages.** Reports, mockups and anything easier to read as a page go out with `publish_artifact`.
-- **Blocked.** `report_progress` phase `blocked` means "waiting on you": the session shows as waiting on your operator in Gleap and does not expire. Your next report picks it back up.
-- **Stopped.** A result that says the session was stopped in Gleap means stop working: wrap up and tell your operator.
-- **Wrap up every turn.** Before you hand back to your operator, call `wrap_up`: the recap first (what is now true, what is not done or not verified), then at most one question with one or two actions, the recommended one first.
+- **Ask before the customer hears anything.** Show your operator the exact text in this conversation: "I'd tell the customer: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes. When they told you to answer, tell or update the customer, that is the yes. Never stage a reply in the ticket composer.
+- **The customer wrote meanwhile.** If `send_message` is refused because the customer wrote something new, read it, adjust your reply and send it once more. Refused again: ask your operator.
+- **New customer messages** listed in any Gleap result: read them before you go on.
+- **Report every step** with `report_progress`: status `working` with step `investigating`, `reproduced` or `fixing`. A question for your team: status `needs_input` with the question, and ask your operator here too. You cannot fix it: status `failed` with the reason.
+- **STOP** in any Gleap result: stop at once. No more commits, pushes, ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
+- **The PR** goes in with `report_progress` status `completed`, the `prUrl` and the two fix messages (the workflow says how). A merged PR does not close the ticket: the customer confirms it, or Gleap marks it done 24 hours after the last answer.
+- **End with how you solved it.** Your last report carries `howSolved`: one paragraph on the cause, what you changed and how you checked it, with no customer data. That is the report when the customer confirms it works, or your PR report if your work ends there. When the ticket is solved or you hand it back, delete `.gleap/session.json`.
+- **Work visibly.** Keep a plan for anything with more than two steps (your todo tool, or `update_plan` with exactly one step `in_progress`). After a change your operator can see, `share_screenshot` 1 to 3 shots with a one-line caption. Reports and mockups go out with `publish_artifact`. End every turn with `wrap_up`: the recap first, then at most one question with one or two actions, the recommended one first.
 
 ## Never
 
-- Close, archive or snooze the ticket, or change its assignee, unless your operator tells you to. Once your PR is registered with `report_progress` (phase `pr_opened`), Gleap sends the fix messages and closes the ticket.
+- Close, archive or snooze the ticket, or change its assignee, unless your operator tells you to.
+- Write into the ticket composer. Ask your operator here, then send.
 - Post status or findings as internal notes. They belong in `report_progress`.
 - Commit `.gleap/`.
