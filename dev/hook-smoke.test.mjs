@@ -6,9 +6,10 @@
 // Covers what the hook must guarantee: the right route and body per event,
 // the Bearer token only to a Gleap (or explicitly allowed local) host, and
 // silence + exit 0 when there is no session file, the token expired, or the
-// server is down or hangs.
+// server is down or hangs. Also the MCP headers helper (the session id only,
+// never the token) and the session file going away on a Gleap STOP.
 import { spawn } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -300,6 +301,73 @@ describe("gleap-hook", () => {
     }
     assert.equal(requests.length, 2);
     for (const d of [down, hang]) rmSync(d, { recursive: true, force: true });
+  });
+
+  test("mcp-headers: the project's session id for the Gleap MCP, never the token; {} without a usable session", async () => {
+    const pluginRoot = dirname(dirname(script));
+    // As Claude Code runs it (.mcp.json): in the plugin's folder (PWD too), the project as --project.
+    const helper = (project, region = "eu", env = {}) =>
+      new Promise((resolve) => {
+        const args = [script, "mcp-headers", "--region", region, ...(project === undefined ? [] : ["--project", project])];
+        const child = spawn(process.execPath, args, {
+          cwd: pluginRoot,
+          env: { ...process.env, GLEAP_HOOK_ALLOW_LOCAL: "1", CLAUDE_PLUGIN_ROOT: pluginRoot, PWD: pluginRoot, ...env },
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        let stdout = "";
+        child.stdout.on("data", (d) => (stdout += d));
+        child.on("close", (code) => resolve({ code, stdout, headers: JSON.parse(stdout) }));
+      });
+    const repo = makeRepo({});
+    for (const ok of [await helper(join(repo, "src", "deep")), await helper(undefined, "eu", { PWD: repo })]) {
+      assert.equal(ok.code, 0);
+      assert.deepEqual(ok.headers, { "x-gleap-session-id": "65f0c0ffee0000000000abcd" });
+      assert.ok(!ok.stdout.includes(TOKEN));
+    }
+
+    const expired = makeRepo({ expiresAt: new Date(Date.now() - 1000).toISOString() });
+    const foreign = makeRepo({ apiBase: "https://gleap.ai.evil.example" });
+    const badId = makeRepo({ sessionId: "../../etc" });
+    for (const [project, region] of [
+      [join(expired, "src"), "eu"],
+      [join(foreign, "src"), "eu"],
+      [join(badId, "src"), "eu"],
+      [repo, "us"], // an EU session on the US plugin's server
+      [pluginRoot, "eu"], // the plugin's own folder is never the project
+      ["", "eu"], // ${CLAUDE_PROJECT_DIR} not filled in: PWD is the plugin's folder
+      [tmpdir(), "eu"], // no session file
+    ]) {
+      const r = await helper(project, region);
+      assert.equal(r.code, 0);
+      assert.deepEqual(r.headers, {}, `${project} ${region}`);
+    }
+    assert.equal(requests.length, 0);
+    for (const d of [repo, expired, foreign, badId]) rmSync(d, { recursive: true, force: true });
+  });
+
+  test("tool-result: a Gleap MCP STOP removes .gleap/session.json; other results and other sessions' STOPs keep it", async () => {
+    const STOP = "STOP: this ticket is no longer yours in Gleap (a teammate took it over, replied to the customer or stopped your session).";
+    const sessionFile = (repo) => join(repo, ".gleap", "session.json");
+    const toolResult = (repo, extra) => runHook(["tool-result", "--harness", "claude-code"], common(repo, { hook_event_name: "PostToolUse", ...extra }));
+
+    const kept = makeRepo({});
+    for (const extra of [
+      { tool_name: "mcp__plugin_gleap_gleap__report_progress", tool_input: {}, tool_response: [{ type: "text", text: "Reported." }] },
+      { tool_name: "Bash", tool_input: { command: "grep -r STOP src" }, tool_response: { stdout: STOP } },
+      { tool_name: "mcp__plugin_gleap_gleap__send_message", tool_input: { sessionId: "65f0c0ffee0000000000ffff" }, tool_response: [{ type: "text", text: STOP }] },
+    ]) {
+      const r = await toolResult(kept, extra);
+      assert.equal(r.code, 0);
+      assert.equal(r.stdout, "");
+      assert.ok(existsSync(sessionFile(kept)), extra.tool_name);
+    }
+
+    const stopped = makeRepo({});
+    const r = await toolResult(stopped, { tool_name: "mcp__plugin_gleap_gleap__update_ticket", tool_input: { ticketId: "abc" }, tool_response: [{ type: "text", text: STOP }] });
+    assert.equal(r.code, 0);
+    assert.equal(existsSync(sessionFile(stopped)), false);
+    assert.equal(requests.length, 0);
+    for (const d of [kept, stopped]) rmSync(d, { recursive: true, force: true });
   });
 
   test("garbage on stdin or an unknown event → exit 0, nothing posted, token never printed", async () => {

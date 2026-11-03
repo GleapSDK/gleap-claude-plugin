@@ -52,9 +52,21 @@ const build = (out) => {
     }),
   );
 
-  const mcp = readJson(".mcp.json");
-  mcp.mcpServers.gleap.url = US_MCP_URL;
-  writeFileSync(join(out, ".mcp.json"), json(mcp));
+  // Claude Code reads .mcp.json (with the session headersHelper), Codex
+  // .codex-mcp.json: same server, no helper (Codex runs helpers in the
+  // session's folder with a cleared environment, so it cannot reach the
+  // plugin's script).
+  for (const file of [".mcp.json", ".codex-mcp.json"]) {
+    const mcp = readJson(file);
+    const server = mcp.mcpServers.gleap;
+    server.url = US_MCP_URL;
+    if (server.headersHelper) {
+      const us = server.headersHelper.replace("--region eu", "--region us");
+      if (us === server.headersHelper) throw new Error(`${file}: the headersHelper names no "--region eu"`);
+      server.headersHelper = us;
+    }
+    writeFileSync(join(out, file), json(mcp));
+  }
 
   // The directory lists this plugin on its own, so its README must stand alone.
   cpSync(join(root, ".claude-plugin", "icon.png"), join(out, ".claude-plugin", "icon.png"));

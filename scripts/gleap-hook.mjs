@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Gleap coding-agent hook (Claude Code + Codex). Node >= 18, no dependencies.
 //
-//   node gleap-hook.mjs <plan|stop|session-start> [--harness claude-code|codex]
+//   node gleap-hook.mjs <plan|stop|session-start|tool-result> [--harness claude-code|codex]
+//   node gleap-hook.mjs mcp-headers [--region eu|us] [--project <dir>]
 //
 // Reads the hook event JSON on stdin, finds `.gleap/session.json` by walking up
 // from the event's `cwd`, and mirrors the agent's plan / last message to the
@@ -10,18 +11,32 @@
 //   plan           POST {apiBase}/v3/kai-agent-hooks/plan           { items, explanation? }
 //   stop           POST {apiBase}/v3/kai-agent-hooks/stop           { lastMessage?, harness }
 //   session-start  POST {apiBase}/v3/kai-agent-hooks/session-start  { harness, source? }
+//   tool-result    (Claude Code) a Gleap MCP result said STOP: the session is
+//                  over, so `.gleap/session.json` is removed. Nothing is sent.
+//
+// `mcp-headers` is the Gleap MCP server's `headersHelper` (.mcp.json): it reads
+// no stdin and prints `{"x-gleap-session-id": "<id>"}` for the session in the
+// project's `.gleap/session.json`, or `{}` (see mcpHeadersFor).
 //
 // `.gleap/session.json` only exists for sessions started from Gleap (the agent
 // writes it from the `hook` block of a report_progress
 // result). No file, an expired token or a non-Gleap host: the script does
 // nothing. It never blocks or fails the agent: every path exits 0 within ~3.5 s,
-// prints nothing except `{}` for Stop (Codex requires JSON there), and never
-// prints the token.
+// prints nothing except `{}` for Stop (Codex requires JSON there) and the
+// headers object for mcp-headers, and never prints the token.
 
 import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, join, parse } from "node:path";
+import { dirname, isAbsolute, join, parse, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const EVENTS = new Set(["plan", "stop", "session-start"]);
+const EVENTS = new Set(["plan", "stop", "session-start", "tool-result"]);
+const SESSION_ID_RE = /^[a-f0-9]{24}$/i;
+/**
+ * The Gleap MCP's STOP sentence (the session was stopped in Gleap: a teammate
+ * took the ticket over, replied, or stopped it), the current wording and the
+ * one before it. The same pattern Kai Code's runner ends a run on.
+ */
+export const GLEAP_STOP_PATTERN = /STOP: (this ticket is no longer yours in Gleap|your operator stopped this session in Gleap)/;
 const REQUEST_TIMEOUT_MS = 2000;
 const HARD_EXIT_MS = 3500;
 const MAX_STDIN_BYTES = 2_000_000;
@@ -210,6 +225,92 @@ export const readSession = (file, now = Date.now()) => {
   return session;
 };
 
+/** `eu` or `us` for a Gleap URL (`*.us.gleap.ai` is the US region, every other host the EU), null when unparseable. */
+export const regionOf = (url) => {
+  try {
+    return new URL(String(url)).hostname.toLowerCase().split(".").includes("us") ? "us" : "eu";
+  } catch {
+    return null;
+  }
+};
+
+/** This plugin's own folder (where this script lives), never a project. */
+const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+/**
+ * The folder Claude Code works in, for the headers helper. Claude Code runs a
+ * plugin's `headersHelper` inside the plugin's folder (PWD included), so the
+ * project comes in as `--project "${CLAUDE_PROJECT_DIR}"`, which Claude Code
+ * fills in; CLAUDE_PROJECT_DIR / PWD / cwd for other callers. Never the
+ * plugin's own folder.
+ */
+export const projectDirOf = ({ project, env = process.env, cwd = process.cwd(), pluginRoot = PLUGIN_ROOT } = {}) => {
+  for (const candidate of [project, env.CLAUDE_PROJECT_DIR, env.PWD, cwd]) {
+    if (typeof candidate !== "string" || !candidate || !isAbsolute(candidate)) continue;
+    const dir = resolve(candidate);
+    if (dir === pluginRoot || dir.startsWith(`${pluginRoot}${sep}`)) continue;
+    return dir;
+  }
+  return null;
+};
+
+/**
+ * The headers Claude Code sends with every request to the Gleap MCP server
+ * (the plugin's `headersHelper`, run when the server connects): the coding
+ * session this repository works for, so its writes are booked to the session
+ * and checked by Gleap's guard. `{}` (no header, as before) without a session
+ * file, when it expired, is not a Gleap session, or belongs to the other
+ * region (`region`: the plugin's own, from its `--region`). Never the token.
+ */
+export const mcpHeadersFor = ({ project, region, env = process.env, cwd = process.cwd(), now = Date.now() } = {}) => {
+  const dir = projectDirOf({ project, env, cwd });
+  const file = dir ? findSessionFile(dir) : null;
+  const session = file ? readSession(file, now) : null;
+  if (!session || !SESSION_ID_RE.test(String(session.sessionId ?? ""))) return {};
+  if (!isAllowedApiBase(session.apiBase, env)) return {};
+  if ((region === "eu" || region === "us") && regionOf(session.apiBase) !== region) return {};
+  return { "x-gleap-session-id": session.sessionId };
+};
+
+/**
+ * Whether a PostToolUse event is a Gleap MCP tool whose result says STOP.
+ * Only an MCP tool of a Gleap server counts: a command printing the sentence
+ * (grep over the MCP server's source) is not a stop.
+ */
+export const isGleapStopResult = (event) => {
+  if (!/^mcp__.*gleap.*__/i.test(String(event?.tool_name ?? ""))) return false;
+  const response = event?.tool_response;
+  let text = "";
+  try {
+    text = typeof response === "string" ? response : JSON.stringify(response ?? "");
+  } catch {
+    return false;
+  }
+  return GLEAP_STOP_PATTERN.test(text);
+};
+
+/**
+ * A STOP ends the session: its file goes, so the next Claude Code session in
+ * this repository does not name a stopped session. A STOP for another session
+ * (the tool named a different `sessionId`) leaves the file alone.
+ */
+export const dropStoppedSession = (sessionFile, event) => {
+  const named = String(asObject(event?.tool_input).sessionId ?? "").trim();
+  let current = "";
+  try {
+    current = String(JSON.parse(readFileSync(sessionFile, "utf8"))?.sessionId ?? "");
+  } catch {
+    // unreadable: it goes too
+  }
+  if (named && current && named.toLowerCase() !== current.toLowerCase()) return false;
+  try {
+    unlinkSync(sessionFile);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // ---------------------------------------------------------------------------
 // I/O
 
@@ -339,6 +440,10 @@ export const run = async (argv = process.argv.slice(2)) => {
   const cwd = typeof event.cwd === "string" && event.cwd ? event.cwd : process.cwd();
   const sessionFile = findSessionFile(cwd);
   if (!sessionFile) return debug("no .gleap/session.json above", cwd);
+  if (kind === "tool-result") {
+    if (!isGleapStopResult(event)) return;
+    return debug(dropStoppedSession(sessionFile, event) ? "STOP: removed session.json" : "STOP for another session; session.json kept");
+  }
   if (tightenSessionFile(sessionFile)) debug("session.json was readable by others; set to 0600");
   const session = readSession(sessionFile);
   if (!session) return debug("session.json unreadable or expired");
@@ -372,7 +477,22 @@ export const run = async (argv = process.argv.slice(2)) => {
 };
 
 // The local smoke test imports this file for its helpers; everything else runs it.
-if (process.env.GLEAP_HOOK_IMPORT_ONLY !== "1") {
+if (process.env.GLEAP_HOOK_IMPORT_ONLY !== "1" && process.argv[2] === "mcp-headers") {
+  // Claude Code needs a JSON object on stdout and exit 0, or it logs an error
+  // (and connects without the header anyway).
+  const argv = process.argv.slice(3);
+  const arg = (name) => {
+    const i = argv.indexOf(name);
+    return i >= 0 ? argv[i + 1] : undefined;
+  };
+  let headers = {};
+  try {
+    headers = mcpHeadersFor({ project: arg("--project"), region: arg("--region") });
+  } catch (err) {
+    debug("mcp-headers:", String(err?.message ?? err));
+  }
+  process.stdout.write(`${JSON.stringify(headers)}\n`, () => process.exit(0));
+} else if (process.env.GLEAP_HOOK_IMPORT_ONLY !== "1") {
   const kind = process.argv[2];
   const finish = () => {
     // Codex requires JSON on stdout for Stop; `{}` is a no-op for both harnesses.

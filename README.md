@@ -62,15 +62,18 @@ Sign-in: the plugin bundles the Gleap MCP server as `gleap`. If Codex doesn't pr
 
 In Claude Code they run as `/gleap:fix-ticket 1234` (or `/gleap-us:…`), or Claude picks them up when you ask it to fix or answer a Gleap ticket. In Codex, ask for it ("fix Gleap ticket #1234") or pick the skill.
 
-**Hooks.** Three hooks run `scripts/gleap-hook.mjs` (Node 18 or later, no dependencies):
+**Hooks.** The hooks run `scripts/gleap-hook.mjs` (Node 18 or later, no dependencies):
 
 | Event | Claude Code | Codex | Sends |
 |---|---|---|---|
 | After the agent updates its plan | `PostToolUse` on `TodoWrite`, `TaskCreate`, `TaskUpdate` | `PostToolUse` on `update_plan` | the plan items (text and status) |
 | When a turn ends | `Stop` | `Stop` | the agent's last message, at most 4,000 characters |
 | When a session starts or resumes | `SessionStart` | `SessionStart` | nothing but "still here" |
+| After a Gleap tool answers STOP | `PostToolUse` on the Gleap MCP tools | (not used) | nothing: it deletes `.gleap/session.json`, because the session is over |
 
 Gleap uses the plan for the live checklist on the session, and the last message as the turn's recap when the agent ended a turn without calling `wrap_up` (an agent's own `wrap_up` always wins).
+
+**Session header (Claude Code).** The plugin's MCP config has a `headersHelper` (the same script, `mcp-headers`): when Claude Code connects to the Gleap MCP server, it adds `x-gleap-session-id` with the id of the session in `.gleap/session.json`. Gleap then books the session's writes (a reply, a status change) to the session's agent and checks them: a write after Gleap stopped the session is refused, and a reply the customer has overtaken is sent back to be re-read. No session file, an expired one or one of the other region: no header, as before. Only the session id is sent, never the token. Claude Code reads the file when it connects, from the folder it was started in (or a folder inside the repository); the agent also passes its `sessionId` on each call. Codex has no such helper for plugins, so there the agent passes `sessionId` only.
 
 ## What the hooks send, and when
 
@@ -84,7 +87,7 @@ With the file present, and only then:
 - It never blocks or fails your agent: every request has a 2-second timeout and the script ends within 3.5 seconds, errors are swallowed, the script always exits 0 and prints nothing your agent sees (Codex's `Stop` gets an empty `{}`, which it requires).
 - For Claude Code's task tools it keeps a small per-session list in `.gleap/hook-tasks-<session>.json` so each update can send the whole plan; files older than seven days are removed.
 
-To stop the hooks for one repository, delete its `.gleap/` folder. To stop them everywhere, uninstall or disable the plugin.
+To stop the hooks and the session header for one repository, delete its `.gleap/` folder. To stop them everywhere, uninstall or disable the plugin.
 
 For local development against a Gleap server on `localhost`, set `GLEAP_HOOK_ALLOW_LOCAL=1` in the agent's environment; `GLEAP_HOOK_DEBUG=1` prints one line per request to stderr (never the token).
 
@@ -118,13 +121,13 @@ Use `gleap-us@gleap` for the US plugin. Any `.gleap/` folders the agent wrote st
 
 ## Requirements
 
-A Gleap account with at least one project. Node.js 18 or later on the machine for the hooks (the skills and MCP server work without it).
+A Gleap account with at least one project. Node.js 18 or later on the machine for the hooks and the session header (the skills and MCP server work without it; without Node, Claude Code logs that the header helper failed and connects without it).
 
 ## Privacy Policy
 
 Gleap's privacy policy is at **https://www.gleap.ai/legal/privacy-policy**.
 
-**What is collected.** The MCP server receives only the arguments of the tool calls your agent makes (search terms, ticket and contact identifiers, and any content you ask it to write), plus the OAuth token identifying your workspace. The hooks send only what is listed under [What the hooks send](#what-the-hooks-send-and-when), and only for sessions started from Gleap. Neither reads your conversation history, your agent's memory, or local files beyond `.gleap/session.json`.
+**What is collected.** The MCP server receives only the arguments of the tool calls your agent makes (search terms, ticket and contact identifiers, and any content you ask it to write), plus the OAuth token identifying your workspace and, for a session started from Gleap, its session id (`x-gleap-session-id`). The hooks send only what is listed under [What the hooks send](#what-the-hooks-send-and-when), and only for sessions started from Gleap. Neither reads your conversation history, your agent's memory, or local files beyond `.gleap/session.json`.
 
 **How it is used and stored.** Requests are served by the Gleap API against your own workspace data and are subject to the same retention as the rest of your Gleap account. Plan items and recaps are stored on the Gleap coding session they belong to.
 
@@ -136,7 +139,7 @@ Gleap's privacy policy is at **https://www.gleap.ai/legal/privacy-policy**.
 
 ## Development
 
-`plugins/gleap-us/` is generated from the repository root: edit the root files, then run `node dev/sync-us-plugin.mjs` (`--check` fails when the copy is stale). `node --test dev/hook-smoke.test.mjs` runs the hook script against a local HTTP server. `claude plugin validate .` checks the Claude Code manifests.
+`plugins/gleap-us/` is generated from the repository root: edit the root files, then run `node dev/sync-us-plugin.mjs` (`--check` fails when the copy is stale). Claude Code reads `.mcp.json` (with the session `headersHelper`), Codex `.codex-mcp.json` (the same server without it: Codex runs header helpers in the session's folder with a cleared environment, so it can't reach the plugin's script). `node --test dev/hook-smoke.test.mjs` runs the hook script against a local HTTP server. `claude plugin validate .` checks the Claude Code manifests.
 
 ## Support
 
