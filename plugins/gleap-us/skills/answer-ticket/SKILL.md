@@ -9,7 +9,7 @@ The ticket is the one your operator named: a `#number`, a 24-char ticket id, or 
 
 This is an investigation, not a fix: no code changes, no commits, no pull request, no writes to production data, and nothing goes to the customer before your operator says yes to the text.
 
-You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer or stops your session: then a Gleap result says STOP.
+You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer, unassigns you or stops your session: then a Gleap result says STOP.
 
 ## 1. Report in and save the session file
 
@@ -22,7 +22,7 @@ The plugin reads that file. Its hooks show your plan in Gleap and, if a turn end
 
 ## 2. Continuing an earlier session
 
-If the kickoff says you continue an earlier session ("Continue in Claude Code"), read two things first: the whole ticket thread (`get_ticket_messages`) and the last session's notes in the kickoff. The customer may have written since. Then go on from where that session stopped. The session id stays the same.
+If the kickoff says you continue an earlier session ("Continue in Claude Code"), read two things first: the whole ticket thread (`get_ticket_messages`) and the last session's notes in the kickoff. The customer may have written since. Then go on from where that session stopped. Use the session id this kickoff gives you, not the earlier session's.
 
 ## 3. Load the workflow
 

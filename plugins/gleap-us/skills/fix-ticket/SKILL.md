@@ -7,7 +7,7 @@ description: Fix a Gleap ticket end to end as a tracked Gleap coding session tha
 
 The ticket is the one your operator named: a `#number`, a 24-char ticket id, or a Gleap dashboard link (the id is the 24-char segment in it). A kickoff prompt from Gleap's "Open in …" button also names the coding session ("It is Gleap coding session …"). If you can't tell which ticket is meant, ask before you start.
 
-You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer or stops your session: then a Gleap result says STOP.
+You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer, unassigns you or stops your session: then a Gleap result says STOP.
 
 ## 1. Report in and save the session file
 
@@ -20,7 +20,7 @@ The plugin reads that file. Its hooks show your plan in Gleap and, if a turn end
 
 ## 2. Continuing an earlier session
 
-If the kickoff says you continue an earlier session ("Continue in Claude Code"), read two things first, before you change anything: the whole ticket thread (`get_ticket_messages`) and the last session's notes in the kickoff. The customer may have written since. Then go on from where that session stopped. The session id stays the same.
+If the kickoff says you continue an earlier session ("Continue in Claude Code"), read two things first, before you change anything: the whole ticket thread (`get_ticket_messages`) and the last session's notes in the kickoff. The customer may have written since. Then go on from where that session stopped. Use the session id this kickoff gives you, not the earlier session's.
 
 ## 3. Load the workflow
 
@@ -38,7 +38,7 @@ Work by it for the rest of the session: it carries the steps and the rules for c
 - **New customer messages** listed in any Gleap result: read them before you go on.
 - **Report every step** with `report_progress`: status `working` with step `investigating`, `reproduced` or `fixing`. A question for your team: status `needs_input` with the question, and ask your operator here too. You cannot fix it: status `failed` with the reason.
 - **STOP** in any Gleap result: stop at once. No more commits, pushes, ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
-- **The PR** goes in with `report_progress` status `completed`, the `prUrl` and the two fix messages (the workflow says how). A merged PR does not close the ticket: the customer confirms it, or Gleap marks it done 24 hours after the last answer.
+- **The PR** goes in with `report_progress` status `completed`, the `prUrl` and the two fix messages (the workflow says how). A merged PR never closes a customer ticket: the customer confirms it, or Gleap marks it done 24 hours after the last answer. A feature request moves to Done at the merge.
 - **End with how you solved it.** Your last report carries `howSolved`: one paragraph on the cause, what you changed and how you checked it, with no customer data. That is the report when the customer confirms it works, or your PR report if your work ends there. When the ticket is solved or you hand it back, delete `.gleap/session.json`.
 - **Work visibly.** Keep a plan for anything with more than two steps (your todo tool, or `update_plan` with exactly one step `in_progress`). After a change your operator can see, `share_screenshot` 1 to 3 shots with a one-line caption. Reports and mockups go out with `publish_artifact`. End every turn with `wrap_up`: the recap first, then at most one question with one or two actions, the recommended one first.
 

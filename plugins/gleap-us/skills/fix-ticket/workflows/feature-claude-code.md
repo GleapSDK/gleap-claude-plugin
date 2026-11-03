@@ -45,10 +45,10 @@ If the MCP still cannot be connected, continue without it: build using the kicko
 
 ## 3. You own this request
 
-Your session owns the request until it ships or Gleap hands it on:
+Your session owns the request until your PR merges or Gleap hands it on:
 
 - **New messages.** Gleap results list what the requesters wrote since you last read the thread. Read it before you go on: it can change the scope.
-- **STOP.** When a teammate takes the request over, replies on it or stops your session, the next Gleap result says STOP. Stop at once: no more commits, pushes, ticket changes or messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
+- **STOP.** When a teammate takes the request over, replies on it, unassigns you or stops your session, the next Gleap result says STOP. Stop at once: no more commits, pushes, ticket changes or messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
 
 ## 4. Work visibly
 
@@ -79,7 +79,7 @@ Size the request first. Small and unambiguous: the short plan below is enough. B
 - Add tests for the new behavior. If the repo has a feature-flag mechanism and the change is risky or wide-reaching, put it behind the flag.
 - Verify before opening a PR: run the relevant tests/build and exercise the new path end to end yourself, then share the screenshots from step 4.
 - Branch `gleap/<ticket-number>-<short-slug>` off the repository's default branch (unless your operator says otherwise). PR title: `<concise summary> (Gleap #<ticket-number>)`. In the description: link the request, note how many people upvoted it, and list what you deliberately left out of scope.
-- When the PR is up: `report_progress` with status `completed` and the `prUrl`. Registering the PR hands the rest of the lifecycle to Gleap: once it ships, Gleap notifies every upvoter and Gleap — never you — moves the request to done. Your part ends at the reply step below.
+- When the PR is up: `report_progress` with status `completed` and the `prUrl`. Registering the PR hands the rest of the lifecycle to Gleap: when it merges, Gleap moves the request to Done and tells everyone who upvoted that it shipped. You never move it yourself. Only a feature request moves at the merge: a customer ticket never closes on one. Your part ends at the reply step below.
 - The merge signal comes from the repository's Gleap connection — if this repository is not connected to Gleap, tell your operator the merge won't be detected automatically.
 
 ## 7. Reply to the requesters
@@ -88,7 +88,7 @@ Size the request first. Small and unambiguous: the short plan below is enough. B
 - Write a short, friendly reply in the requesters' language (match the conversation): that it is being built, plus one line on what is included. No release dates, no internal details, file paths, or code.
 - **Ask first.** Show your operator the exact text in this conversation: "I'd tell the requesters: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes, and tell them in one line what you sent. When your operator told you to reply, that instruction is the yes. Never stage a reply in the composer: there is no draft tool any more.
 - **Refused because someone wrote meanwhile?** `send_message` says so and lists the new messages. Read them, change your text if it no longer fits (tell your operator what changed), and send it once more. Refused again: ask your operator.
-- There is no ship message here: everyone who upvoted is notified by Gleap when the request ships, so you never write to them individually — never pass `customerUpdateMessage` or `customerShipMessage`, and never subscribe or unsubscribe anyone.
+- There is no ship message here: when your PR merges, Gleap tells everyone who upvoted that it shipped, so you never write to them individually — never pass `customerUpdateMessage` or `customerShipMessage`, and never subscribe or unsubscribe anyone.
 - After the reply is sent, your writes to this request are over: moving it to done, closing, and archiving are Gleap's job, not yours.
 
 This is the only thing you write to the request thread. Progress, questions, scope decisions, and the PR link all live in `report_progress` (the sidebar) — do not repeat them as internal notes.
@@ -103,7 +103,7 @@ The PR is open and registered via `report_progress` (status `completed` with the
 
 ## Hard rules
 
-- Never mark the request done, shipped, closed, or archived yourself, never snooze it, and never change the assignee. Moving the request is Gleap's job: when your registered PR ships, Gleap notifies the upvoters and updates the request itself.
+- Never mark the request done, shipped, closed, or archived yourself, never snooze it, and never change the assignee. Moving the request is Gleap's job: when your registered PR merges, Gleap moves it to Done and tells the upvoters it shipped.
 - Never build beyond the approved scope. Good ideas you spot along the way get mentioned, not implemented.
 - Nothing reaches the requesters before your operator said yes to the text, and never promise a release date. Never write into the composer.
 - On STOP, stop: no commits, pushes, ticket changes or messages after it.
