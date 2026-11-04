@@ -50,8 +50,8 @@ If the MCP still cannot be connected, continue without it: investigate using the
 Your session owns the ticket until the customer says it is solved:
 
 - **New customer messages.** Gleap results list what the customer wrote since you last read the thread. Read it before you go on: it can change the answer.
-- **STOP.** When a teammate takes the ticket over, replies to the customer, unassigns you or stops your session, the next Gleap result says STOP. Stop at once: no more ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
-- **Rounds.** After your answer the ticket waits on the customer. They write that it did not help, or add a detail: same session, next round (look again, propose the next answer). They confirm it helped: finish with `howSolved` (step 6). Anything else (a new question, or they want a person): Gleap decides who takes it, and if it is no longer yours the next result says STOP.
+- **A teammate steps in.** When a teammate replies on the ticket or takes it over, tell your operator in one line and follow their call. If a Gleap result ever says STOP, stop at once: no more ticket changes or customer messages; delete `.gleap/session.json` and tell your operator where you left off.
+- **Rounds.** After your answer the ticket waits on the customer. They write that it did not help, or add a detail: same session, next round (look again, propose the next answer). They confirm it helped: finish with `howSolved` (step 6). Anything else (a new question, or they want a person): Gleap decides who takes it; tell your operator when it is no longer yours.
 
 ## 4. Work visibly
 

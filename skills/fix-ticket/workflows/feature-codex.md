@@ -54,7 +54,7 @@ If the MCP still cannot be connected, continue without it: build using the kicko
 Your session owns the request until your PR merges or Gleap hands it on:
 
 - **New messages.** Gleap results list what the requesters wrote since you last read the thread. Read it before you go on: it can change the scope.
-- **STOP.** When a teammate takes the request over, replies on it, unassigns you or stops your session, the next Gleap result says STOP. Stop at once: no more commits, pushes, ticket changes or messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
+- **A teammate steps in.** When a teammate replies on the request or takes it over, tell your operator in one line and follow their call. If a Gleap result ever says STOP, stop at once: no more commits, pushes, ticket changes or messages; delete `.gleap/session.json` and tell your operator where you left off.
 
 ## 4. Work visibly
 

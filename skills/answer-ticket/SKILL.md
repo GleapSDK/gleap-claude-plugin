@@ -9,7 +9,7 @@ The ticket is the one your operator named: a `#number`, a 24-char ticket id, or 
 
 This is an investigation, not a fix: no code changes, no commits, no pull request, no writes to production data, and nothing goes to the customer before your operator says yes to the text.
 
-You own this ticket until the customer says it is solved. Keep working it through the customer's replies. Gleap ends that only when a teammate takes the ticket over, replies to the customer, unassigns you or stops your session: then a Gleap result says STOP.
+You own this ticket until the customer says it is solved. Keep working it through the customer's replies. You work for the person who runs you: when a teammate replies on the ticket or takes it over, tell your operator in one line and follow their call.
 
 ## 1. Report in and save the session file
 
@@ -34,7 +34,7 @@ Read the workflow in this skill's `workflows/` folder for the app you run in: `w
 - **The customer wrote meanwhile.** If `send_message` is refused because the customer wrote something new, read it, adjust your reply and send it once more. Refused again: ask your operator.
 - **New customer messages** listed in any Gleap result: read them before you go on.
 - **Report every step** with `report_progress`: status `working` with step `investigating`. A question for your team: status `needs_input` with the question, and ask your operator here too. Once the answer is sent: status `completed` with a one-line finding.
-- **STOP** in any Gleap result: stop at once. No more ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
+- **STOP** in a Gleap result (only a session Gleap started on its own gets one): stop at once. No more ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
 - **End with how you solved it.** Your last report carries `howSolved`: one paragraph on what was going on, what you answered and how you checked it, with no customer data. That is the report when the customer confirms it helped, or the one after your answer if your work ends there. When the ticket is solved or you hand it back, delete `.gleap/session.json`.
 - **Work visibly.** Keep a plan for anything with more than two steps. A screenshot of what the customer sees goes out with `share_screenshot`, a longer finding as a page with `publish_artifact`. End every turn with `wrap_up`: the recap first (what you found, what is not verified), then at most one question with one or two actions.
 
