@@ -34,7 +34,7 @@ Work by it for the rest of the session: it carries the steps and the rules for c
 ## 4. The rules in short
 
 - **Ask before the customer hears anything.** Show your operator the exact text in this conversation: "I'd tell the customer: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes. When they told you to answer, tell or update the customer, that is the yes. Never stage a reply in the ticket composer.
-- **The customer wrote meanwhile.** If `send_message` is refused because the customer wrote something new, read it, adjust your reply and send it once more. Refused again: ask your operator.
+- **The customer wrote meanwhile.** A send from your session is never refused: when its result lists `newCustomerMessages`, they arrived before your reply went out. Read them; if your reply no longer fits, tell your operator and follow up with one more message.
 - **New customer messages** listed in any Gleap result: read them before you go on.
 - **Report every step** with `report_progress`: status `working` with step `investigating`, `reproduced` or `fixing`. A question for your team: status `needs_input` with the question, and ask your operator here too. You cannot fix it: status `failed` with the reason.
 - **STOP** in a Gleap result (only a session Gleap started on its own gets one): stop at once. No more commits, pushes, ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
