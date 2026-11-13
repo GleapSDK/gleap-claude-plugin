@@ -9,9 +9,9 @@ The ticket is the one your operator named: a `#number`, a 24-char ticket id, or 
 
 You own this ticket until the customer says it is solved. Keep working it through the customer's replies. You work for the person who runs you: when a teammate replies on the ticket or takes it over, tell your operator in one line and follow their call.
 
-## 1. Report in and save the session file
+## 1. Get the brief, report in and save the session file
 
-Make this call first, before you read code:
+If the kickoff names a Gleap coding session, call `get_session_brief` with that `sessionId` first: its result is your kickoff (ticket, rules, findings, repository). Follow it. Then make the `report_progress` call, before you read code. A kickoff without a session id starts with that call:
 
 - `report_progress` with status `working`, step `investigating`, a one-line message, `agentName` (`"Claude Code"` or `"Codex"`), and the `sessionId` from the kickoff. No session id? Pass `ticketId` (24-char id or `#number`) instead. The result names the session id; pass it on every later Gleap call that takes one, `send_message` included.
 - The result also ends with a session-file block. Write it to `.gleap/session.json` at the root of the repository you work in, exactly as given, overwriting any older file. Make it readable only by you: run `chmod 600 .gleap/session.json` right after writing it (skip this on Windows). Then make sure git ignores it: `p="$(git rev-parse --git-path info/exclude)"; mkdir -p "$(dirname "$p")"; grep -qxF '.gleap/' "$p" 2>/dev/null || echo '.gleap/' >> "$p"`. The file holds a short-lived token: never commit it, print it, or paste it anywhere else.
