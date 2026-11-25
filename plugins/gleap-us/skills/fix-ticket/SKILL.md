@@ -7,7 +7,7 @@ description: Fix a Gleap ticket end to end as a tracked Gleap coding session tha
 
 The ticket is the one your operator named: a `#number`, a 24-char ticket id, or a Gleap dashboard link (the id is the 24-char segment in it). A kickoff prompt from Gleap's "Open in …" button also names the coding session ("It is Gleap coding session …"). If you can't tell which ticket is meant, ask before you start.
 
-You own this ticket until the customer says it is solved. Keep working it through the customer's replies. A code fix Gleap started (your kickoff or brief says Operator answers the customer) is different: it owns the ticket only until its pull request is open and never writes to the customer, because Operator does. You work for the person who runs you: when a teammate replies on the ticket or takes it over, tell your operator in one line and follow their call.
+You own this ticket until the customer says it is solved. Keep working it through the customer's replies. A code fix Gleap started (your kickoff or brief says Gleap's Operator answers the customer, or Gleap refuses your `send_message` for that reason) is different: it owns the ticket only until its pull request is open and never writes to the customer, because Operator does. You work for the person who runs you: when a teammate replies on the ticket or takes it over, tell your operator in one line and follow their call.
 
 ## 1. Report in and save the session file
 
@@ -34,17 +34,17 @@ Work by it for the rest of the session: it carries the steps and the rules for c
 ## 4. The rules in short
 
 - **Ask before the customer hears anything.** Show your operator the exact text in this conversation: "I'd tell the customer: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes. When they told you to answer, tell or update the customer, that is the yes. Never stage a reply in the ticket composer. A code fix never sends: no `send_message` (Gleap refuses it); what the customer should know goes into `customerLine` on your reports.
-- **The customer wrote meanwhile.** A send from your session is never refused: when its result lists `newCustomerMessages`, they arrived before your reply went out. Read them; if your reply no longer fits, tell your operator and follow up with one more message.
+- **The customer wrote meanwhile.** Not in a code fix, a send from your session is never refused for that: when its result lists `newCustomerMessages`, they arrived before your reply went out. Read them; if your reply no longer fits, tell your operator and follow up with one more message.
 - **New customer messages** listed in any Gleap result: read them before you go on.
 - **Report every step** with `report_progress`: status `working` with step `investigating`, `reproduced` or `fixing`. A question for your team: status `needs_input` with the question, and ask your operator here too. You cannot fix it: status `failed` with the reason.
 - **STOP** in a Gleap result (only a session Gleap started on its own gets one): stop at once. No more commits, pushes, ticket changes or customer messages. Delete `.gleap/session.json` and tell your operator in one line where you left off.
-- **The PR** goes in with `report_progress` status `completed`, the `prUrl` and the two fix messages (the workflow says how). A merged PR never closes a customer ticket: the customer confirms it, or Gleap marks it done 24 hours after the last answer. A feature request moves to Done at the merge.
+- **The PR** goes in with `report_progress` status `completed`, the `prUrl` and the two fix messages (the workflow says how). Gleap moves the ticket to Done when the PR merges to production, unless the project switched that off (then the customer confirms it, or Gleap marks it done 24 hours after the last answer); a customer reply reopens it. A feature request moves to Done at the merge.
 - **End with how you solved it.** Your last report carries `howSolved`: one paragraph on the cause, what you changed and how you checked it, with no customer data. That is the report when the customer confirms it works, or your PR report if your work ends there. When the ticket is solved or you hand it back, delete `.gleap/session.json`.
 - **Work visibly.** Keep a plan for anything with more than two steps (your todo tool, or `update_plan` with exactly one step `in_progress`). After a change your operator can see, `share_screenshot` 1 to 3 shots with a one-line caption. Reports and mockups go out with `publish_artifact`. End every turn with `wrap_up`: the recap first, then at most one question with one or two actions, the recommended one first.
 
 ## Never
 
 - Close, archive or snooze the ticket, or change its assignee, unless your operator tells you to.
-- Write into the ticket composer. Ask your operator here, then send.
+- Write into the ticket composer. Ask your operator here, then send (a code fix never sends).
 - Post status or findings as internal notes. They belong in `report_progress`.
 - Commit `.gleap/`.

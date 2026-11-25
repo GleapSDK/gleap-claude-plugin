@@ -2,6 +2,8 @@
 
 You are implementing a feature request from Gleap, the customer feedback platform. The kickoff message (or your operator) names the request (its #number and 24-char ticket id) and the Gleap project. It defines WHICH request; the live ticket you fetch below is the source of truth for WHAT the customers asked for. The kickoff also names the repository (full name, URL and base branch). Work in your local clone of it: if the folder you were opened in is a different repository, find the clone on this machine or clone it first. If the kickoff names no repository or several, and it is unclear where the change belongs, ask before starting.
 
+**Code fix or your own session.** Gleap started this build from the request's code fix when your kickoff or brief says so, or when Gleap refuses your `send_message` because a code fix holds the request. Then Gleap's Operator (the agent that answers requesters, not the person you work for) handles the requesters, and the lines marked *Code fix* below apply. Every other session (started from your own app or tool) follows the rest. Where your kickoff or brief has its own rules, they win over this workflow.
+
 A feature request is not a bug report. There is nothing to reproduce, the description is a wish rather than a defect, and several people usually want slightly different things. Your job is to find the smallest version that actually delivers the outcome they asked for, get it signed off, and then build it properly.
 
 ## 1. Connect the Gleap MCP (once per machine)
@@ -51,7 +53,7 @@ If the MCP still cannot be connected, continue without it: build using the kicko
 
 ## 3. You own this request
 
-Your session owns the request until your PR merges or Gleap hands it on:
+Your session owns the request until your PR merges or Gleap hands it on. *Code fix:* you own it until your pull request is open; then Operator has it again.
 
 - **New messages.** Gleap results list what the requesters wrote since you last read the thread. Read it before you go on: it can change the scope.
 - **A teammate steps in.** When a teammate replies on the request or takes it over, tell your operator in one line and follow their call. If a Gleap result ever says STOP, stop at once: no more commits, pushes, ticket changes or messages; delete `.gleap/session.json` and tell your operator where you left off.
@@ -64,7 +66,7 @@ Your operator follows this session in Gleap, not in your terminal. Keep it reada
 - **Screenshots.** After a change your operator can see, start the app (the repository's `.claude/launch.json` or `.gleap/dev.yaml` names the dev server when it has one), check the new feature in a browser, and `share_screenshot` 1 to 3 screenshots, each with a one-line caption. Pass `compare_with` with a screenshot from before the change to show a before/after pair. The result gives you one upload command per image: run it, and the screenshot appears in the session once the upload lands. No shell? Pass `imageBase64` instead.
 - **Pages.** The spec, mockups and anything easier to read as a page go out with `publish_artifact` (one self-contained HTML file). Pass the `artifactId` from the earlier result to publish a new version of the same page, for example after a round of feedback on the spec.
 - **Waiting on an answer.** `report_progress` with status `needs_input` and the `question` shows the session as waiting in Gleap, with your question on the request. It does not expire while it waits, and your next report (`working` with its step) picks the session back up.
-- **Wrap up every turn.** Whenever you hand back to your operator, at the end of every turn and not only the last one, call `wrap_up`: the `recap` first (two or three sentences: what is now true, then what is not done or not verified), then at most one `ask`, only when the next move is theirs, with one or two `actions`, the recommended one first. Every action names its `action`: `open_pr`, `review_changes` or `merge_pr` once your PR is registered, `open_preview` while a preview is running. A reply to the requesters is not a wrap-up action: ask in this conversation and send it with `send_message`. Anything else your operator answers in this chat.
+- **Wrap up every turn.** Whenever you hand back to your operator, at the end of every turn and not only the last one, call `wrap_up`: the `recap` first (two or three sentences: what is now true, then what is not done or not verified), then at most one `ask`, only when the next move is theirs, with one or two `actions`, the recommended one first. Every action names its `action`: `open_pr`, `review_changes` or `merge_pr` once your PR is registered, `open_preview` while a preview is running. A reply to the requesters is not a wrap-up action: ask in this conversation and send it with `send_message` (*Code fix:* you send none). Anything else your operator answers in this chat.
 
 ## 5. Scope it and get sign-off — before you write code
 
@@ -92,8 +94,8 @@ Size the request first. Small and unambiguous: the short plan below is enough. B
 
 - First call `get_ticket_messages` once more and honor any new internal notes addressed to you — your operator's team may have steered the scope while you worked.
 - Write a short, friendly reply in the requesters' language (match the conversation): that it is being built, plus one line on what is included. No release dates, no internal details, file paths, or code.
-- **Ask first.** Show your operator the exact text in this conversation: "I'd tell the requesters: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes, and tell them in one line what you sent. When your operator told you to reply, that instruction is the yes. Never stage a reply in the composer: there is no draft tool any more.
-- **Someone wrote meanwhile?** Your send is never refused: the result lists the new messages (`newCustomerMessages`), which arrived before your reply went out. Read them; if your reply no longer fits, tell your operator what changed and follow up with one more message.
+- **Ask first.** Show your operator the exact text in this conversation: "I'd tell the requesters: … Send it?" Send it with `send_message` (`isNote: false`, your `sessionId`) when they say yes, and tell them in one line what you sent. When your operator told you to reply, that instruction is the yes. Never stage a reply in the composer: there is no draft tool any more. *Code fix:* skip this reply: you never call `send_message` (Gleap refuses it), and Operator tells the requesters.
+- **Someone wrote meanwhile?** (not a code fix) Your send is never refused for that: the result lists the new messages (`newCustomerMessages`), which arrived before your reply went out. Read them; if your reply no longer fits, tell your operator what changed and follow up with one more message.
 - There is no ship message here: when your PR merges, Gleap tells everyone who upvoted that it shipped, so you never write to them individually — never pass `customerUpdateMessage` or `customerShipMessage`, and never subscribe or unsubscribe anyone.
 - After the reply is sent, your writes to this request are over: moving it to done, closing, and archiving are Gleap's job, not yours.
 
@@ -105,7 +107,7 @@ Your last `report_progress` (the PR report, or a `completed` report right after 
 
 ## Done when
 
-The PR is open and registered via `report_progress` (status `completed` with the `prUrl`), your operator approved the reply and it is sent, and your last report carries `howSolved`. End the turn with `wrap_up` and stop. Do not move or close the request.
+The PR is open and registered via `report_progress` (status `completed` with the `prUrl`), your operator approved the reply and it is sent (*Code fix:* there is no reply), and your last report carries `howSolved`. End the turn with `wrap_up` and stop. Do not move or close the request.
 
 ## Hard rules
 
@@ -114,5 +116,6 @@ The PR is open and registered via `report_progress` (status `completed` with the
 - Nothing reaches the requesters before your operator said yes to the text, and never promise a release date. Never write into the composer.
 - On STOP, stop: no commits, pushes, ticket changes or messages after it.
 - Do not post internal notes for status or findings — that is what `report_progress` is for. `send_message` is only for the reply your operator approved.
+- *Code fix:* never call `send_message`.
 - Never commit `.gleap/`, and never print or paste the token in `.gleap/session.json`.
 - Gleap replies are plain text; do not use markdown in them.
